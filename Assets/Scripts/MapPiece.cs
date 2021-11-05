@@ -7,7 +7,7 @@ using UnityEngine;
 public abstract class MapPiece : MonoBehaviour
 {
 
-    [SerializeField] [EnumMask] private Side _open_sides_mask;
+    [SerializeField] private Side _open_sides_mask;
     public Side OpenSides => _rotation.RotateSides(_open_sides_mask);
 
     public abstract MapPieceType PieceType { get; }
@@ -22,24 +22,59 @@ public abstract class MapPiece : MonoBehaviour
     public MapPiece CreateCopyAt(Grid grid, uint deepness, MapPieceRotation rotation)
     {
         var piece = Instantiate(this, grid.WorldPositon, rotation.Quaternion);
+        piece._open_sides_mask = _open_sides_mask;
         piece.Deepness = deepness;
         piece._grid = grid;
         piece._rotation = rotation;
         return piece;
     }
 
-    public List<Grid> GetNeighborsPotentialGridPosition()
-    {
-        return MapGenerator.GetOutsets(_rotation.RotateSides(_open_sides_mask)).Select( pos => new Grid(GridPosition + pos)).ToList();
-    }
-
     private void Update()
     {
-        var sides = MapGenerator.GetOutsets(_rotation.RotateSides(_open_sides_mask));
+        var adjacent_grids = GetAdjacentLinkableGrid();
 
-        foreach (var side in sides)
+        foreach (var grid in adjacent_grids)
         {
-            Debug.DrawLine(transform.position, transform.position + new Vector3(side.x, 0, side.y));
+            var dir = grid.WorldPositon - transform.position;
+            Debug.DrawLine(transform.position, transform.position + dir / 2);
         }
+    }
+
+    public Side GetOpenedSideFor(Grid adjacentGrid)
+    {
+        var direction = Grid.GridPosition - adjacentGrid.GridPosition;
+
+        var side = Side.GetSideFrom(direction);
+
+        if (!HasSideOpen(side.Opposite()))
+        {
+            return Side.none;
+        }
+
+        return side;
+    }
+
+    public Side GetClosedSideFor(Grid adjacentGrid)
+    {
+        var direction = Grid.GridPosition - adjacentGrid.GridPosition;
+
+        var side = Side.GetSideFrom(direction);
+
+        if (!HasSideOpen(side.Opposite()))
+        {
+            return side;
+        }
+
+        return Side.none;
+    }
+
+    public bool HasSideOpen(Side side)
+    {
+        return (OpenSides & side) == side;
+    }
+
+    public List<Grid> GetAdjacentLinkableGrid()
+    {
+        return Grid.GetAdjacentGrid(OpenSides);
     }
 }

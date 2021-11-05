@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(Rigidbody))]
 [RequireComponent(typeof(BoxCollider))]
@@ -6,6 +7,8 @@ public class Player : MonoBehaviour
 {
     [SerializeField]
     private float _speed;
+
+    [SerializeField] InputAction move;
 
     private Vector3 _movement;
 
@@ -15,7 +18,8 @@ public class Player : MonoBehaviour
 
     private void Start()
     {
-        
+        RB.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+        move.Enable();
     }
 
     private void FixedUpdate()
@@ -25,6 +29,8 @@ public class Player : MonoBehaviour
 
     private void Update()
     {
-        _movement = new Vector3(Input.GetAxis("Horizontal"), 0 ,Input.GetAxis("Vertical"));
+        var movement2d = move.ReadValue<Vector2>();
+
+        _movement = new Vector3(movement2d.x, 0 ,movement2d.y);
     }
 }

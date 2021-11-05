@@ -4,9 +4,9 @@ using UnityEngine;
 
 public class MapPieceRotation
 {
-    private uint _rotation_level;
+    private int _rotation_level;
 
-    private const uint MAX_ROTATION = 4;
+    private const int MAX_ROTATION = 4;
 
     public static MapPieceRotation None => new MapPieceRotation(0);
     public static MapPieceRotation Quarter => new MapPieceRotation(1);
@@ -15,7 +15,7 @@ public class MapPieceRotation
     public static MapPieceRotation FullTurn => new MapPieceRotation(4);
 
 
-    private MapPieceRotation(uint rotation_level = 0)
+    private MapPieceRotation(int rotation_level = 0)
     {
         _rotation_level = rotation_level;
     }
@@ -35,11 +35,10 @@ public class MapPieceRotation
 
     public Side RotateSides(Side bit_mask)
     {
-        return (Side)
-        (
-                ((int)bit_mask <<                      (int)_rotation_level) | 
-                ((int)bit_mask >> ((int)MAX_ROTATION - (int)_rotation_level))
-        );
+        var uno = bit_mask << _rotation_level;
+        var dos = bit_mask >> (MAX_ROTATION - _rotation_level);
+
+        return uno | dos;
     }
 
     public static bool operator == (MapPieceRotation first, MapPieceRotation second)

@@ -13,35 +13,50 @@ public class Grid
 
     public Vector3 WorldPositon => new Vector3(_gridPosition.x * SideLength, 0, _gridPosition.y * SideLength);
 
-    public static float SideLength;
+    public static float SideLength = 10;
 
     public static Grid Origin => new Grid(Vector2Int.zero);
 
-    public Side GetSide(Grid neighbor, Side neighborOpenSides = Side.all)
+    public Grid FindInDirection(Vector2Int distance)
     {
-        var distance = neighbor.GridPosition - _gridPosition;
-        if (distance == Vector2Int.left && (neighborOpenSides & Side.right) == Side.right)
-        {
-            return Side.left;
-        }
-
-        if (distance == Vector2Int.right && (neighborOpenSides & Side.left) == Side.left)
-        {
-            return Side.right;
-        }
-
-        if (distance == Vector2Int.up && (neighborOpenSides & Side.bot) == Side.bot)
-        {
-            return Side.top;
-        }
-
-        if (distance == Vector2Int.down && (neighborOpenSides & Side.top) == Side.top)
-        {
-            return Side.bot;
-        }
-
-        return new Side();
+        return new Grid(_gridPosition + distance);
     }
+
+    public List<Grid> GetAdjacentGrid(Side SideFilter = null)
+    {
+        SideFilter ??= Side.all;
+
+        List<Grid> solutions = new List<Grid>();
+
+        if ((SideFilter & Side.back) != 0)
+        {
+            solutions.Add(FindInDirection(Vector2Int.down));
+        }
+
+        if ((SideFilter & Side.front) != 0)
+        {
+            solutions.Add(FindInDirection(Vector2Int.up));
+        }
+
+        if ((SideFilter & Side.left) != 0)
+        {
+            solutions.Add(FindInDirection(Vector2Int.left));
+        }
+
+        if ((SideFilter & Side.right) != 0)
+        {
+            solutions.Add(FindInDirection(Vector2Int.right));
+        }
+
+        return solutions;
+    }
+
+    public override string ToString()
+    {
+        return _gridPosition.ToString();
+    }
+
+    // DICTIONNARY INTERFACE
 
     public override bool Equals(object obj)
     {
