@@ -1,0 +1,60 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+[RequireComponent(typeof(Rigidbody))]
+[RequireComponent(typeof(Collider))]
+public class Projectile : MonoBehaviour
+{
+    [SerializeField] float _speed;
+    [SerializeField] float _lifetime;
+
+    private Character _launcher;
+
+    private Rigidbody _rb;
+    private Rigidbody RB => _rb ??= GetComponent<Rigidbody>();
+
+    private Collider _collider;
+    public Collider Collider => _collider ??= GetComponent<Collider>();
+
+    private void Start()
+    {
+        RB.useGravity = false;
+        RB.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+
+        Collider.isTrigger = false;
+
+        StartCoroutine( DestroyAfterLifetime() );
+    }
+
+    IEnumerator DestroyAfterLifetime()
+    {
+        yield return new WaitForSeconds(_lifetime);
+        Destroy(gameObject);
+    }
+
+    public void LaunchBy(Attack launcher)
+    {
+        var direction = launcher.MovementComponent.Direction3D.normalized;
+
+        RB.WakeUp();
+        RB.position = launcher.transform.position;
+        RB.velocity = direction * _speed;
+        RB.rotation = Quaternion.LookRotation(direction);
+
+        _launcher = launcher;
+        Physics.IgnoreCollision(Collider, launcher.GetComponent<Collider>(), true);
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        var characterHit = collision.collider.GetComponent<Character>();
+
+        if (characterHit != null && characterHit.HitComponent.CanBeHitBy(_launcher))
+        {
+            characterHit.HitComponent.Hit(10);
+        }
+
+        Destroy(gameObject);
+    }
+}
